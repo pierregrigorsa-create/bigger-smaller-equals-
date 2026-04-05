@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🐊 Bigger Than, Smaller Than &amp; Equals!</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#0a1628,#1a2e4a);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px 8px 24px;}
+
+#stage{width:100%;max-width:880px;background:#fff9f0;border-radius:22px;overflow:hidden;position:relative;box-shadow:0 24px 70px rgba(0,0,0,0.7);display:flex;flex-direction:column;}
+
+.float-sym{position:absolute;font-family:'Fredoka One',cursive;opacity:0.04;pointer-events:none;animation:float-up 13s linear infinite;color:#4ECDC4;}
+@keyframes float-up{from{transform:translateY(110%) rotate(-10deg);}to{transform:translateY(-15%) rotate(10deg);}}
+
+.scene{display:none;flex-direction:column;flex:1;}
+.scene.active{display:flex;}
+.hband{width:100%;padding:13px 22px 11px;display:flex;flex-direction:column;flex-shrink:0;}
+.hband h1{font-family:'Fredoka One',cursive;font-size:clamp(15px,2.3vw,24px);color:#fff;text-shadow:0 2px 6px rgba(0,0,0,0.3);}
+.hband p{font-size:clamp(11px,1.2vw,13px);color:rgba(255,255,255,0.9);font-weight:700;margin-top:2px;}
+.content{display:flex;flex-direction:column;align-items:center;padding:12px 16px 14px;gap:11px;}
+
+/* ── MISS NUMBY ── */
+.numby-row{display:flex;align-items:flex-start;gap:12px;width:100%;}
+.numby-face{flex-shrink:0;}
+.speech-bub{
+  background:linear-gradient(135deg,#FFF8E8,#FFF0D0);
+  border:2.5px solid #FFD700;border-radius:6px 18px 18px 18px;
+  padding:13px 16px;font-size:clamp(12px,1.55vw,16px);
+  line-height:1.65;color:#2C1810;font-weight:700;
+  flex:1;min-height:58px;
+}
+.numby-label{font-family:'Fredoka One',cursive;font-size:13px;color:#0a5e4a;text-align:center;margin-top:4px;background:linear-gradient(135deg,#4ECDC4,#26B5AC);color:white;padding:2px 12px;border-radius:50px;}
+
+/* ── COMPARISON DISPLAY ── */
+.compare-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;width:100%;}
+.num-box{
+  width:90px;height:96px;border-radius:18px;
+  font-family:'Fredoka One',cursive;font-size:52px;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;box-shadow:0 5px 18px rgba(0,0,0,0.18);
+  border:4px solid rgba(255,255,255,0.35);flex-shrink:0;
+  animation:numPop .45s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes numPop{0%{transform:scale(0) rotate(-8deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;}}
+
+.sym-box{
+  width:90px;height:96px;border-radius:18px;
+  font-family:'Fredoka One',cursive;font-size:58px;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;box-shadow:0 5px 18px rgba(0,0,0,0.22);
+  border:4px solid rgba(255,255,255,0.4);flex-shrink:0;
+}
+.sym-box.big{background:linear-gradient(145deg,#E74C3C,#C0392B);}
+.sym-box.small{background:linear-gradient(145deg,#2980B9,#1565C0);}
+.sym-box.eq{background:linear-gradient(145deg,#27AE60,#1B5E20);}
+
+/* ── CROCODILE CARD ── */
+.croc-card{
+  background:#fff;border-radius:18px;border:3px solid #4ECDC4;
+  padding:14px 18px;width:100%;box-shadow:0 4px 16px rgba(78,205,196,0.2);
+  text-align:center;
+}
+.croc-title{font-family:'Fredoka One',cursive;font-size:clamp(15px,2vw,20px);color:#1a6a5e;margin-bottom:8px;}
+.croc-rule{font-size:clamp(13px,1.5vw,15px);font-weight:800;color:#333;line-height:1.7;}
+
+/* ── SYMBOL CHOICE BUTTONS ── */
+.sym-choices{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;}
+.sym-btn{
+  width:86px;height:86px;border-radius:16px;
+  font-family:'Fredoka One',cursive;font-size:48px;
+  border:none;cursor:pointer;color:#fff;
+  box-shadow:0 5px 16px rgba(0,0,0,0.22);
+  transition:transform .2s,box-shadow .2s;
+  user-select:none;
+}
+.sym-btn:hover:not(:disabled){transform:scale(1.12);box-shadow:0 8px 22px rgba(0,0,0,0.28);}
+.sym-btn.gt{background:linear-gradient(145deg,#E74C3C,#C0392B);}
+.sym-btn.lt{background:linear-gradient(145deg,#2980B9,#1565C0);}
+.sym-btn.eq2{background:linear-gradient(145deg,#27AE60,#1B5E20);}
+.sym-btn.wrong-shake{animation:shake .4s ease-in-out;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.sym-btn:disabled{opacity:.4;cursor:default;transform:none;}
+
+/* ── SONG SCENE ── */
+.song-card{
+  background:linear-gradient(135deg,#1B4D3E,#2E7D62);
+  border-radius:20px;padding:18px 20px;width:100%;
+  box-shadow:0 6px 24px rgba(0,0,0,0.22);
+}
+.song-line{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(14px,1.9vw,19px);
+  color:#fff;line-height:2;text-align:center;
+  letter-spacing:.3px;
+}
+.song-line.highlight{
+  color:#FFD700;font-size:clamp(16px,2.2vw,22px);
+  text-shadow:0 0 12px rgba(255,215,0,.5);
+}
+.song-note{font-size:1.4em;margin:0 4px;}
+@keyframes noteBounce{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-10px) rotate(5deg);}}
+.bouncing-note{display:inline-block;animation:noteBounce .7s ease-in-out infinite;}
+
+/* ── HINT BOX ── */
+.hint-box{
+  background:linear-gradient(135deg,#FFF3CD,#FFE082);
+  border:2px solid #FFD700;border-radius:14px;
+  padding:10px 16px;font-size:clamp(12px,1.4vw,14px);
+  font-weight:800;color:#5C3A00;text-align:center;width:100%;
+}
+
+/* ── PROGRESS ── */
+#prog-wrap{width:100%;height:6px;background:rgba(0,0,0,0.1);flex-shrink:0;}
+#prog-fill{height:100%;background:linear-gradient(90deg,#4ECDC4,#26B5AC);width:0%;transition:width .5s;border-radius:0 4px 4px 0;}
+
+/* ── CONFETTI ── */
+.confetti-text{font-family:'Fredoka One',cursive;font-size:clamp(16px,2.3vw,26px);animation:rainbow 1.5s linear infinite;text-align:center;}
+@keyframes rainbow{0%{color:#4ECDC4;}25%{color:#FFD700;}50%{color:#E74C3C;}75%{color:#A29BFE;}100%{color:#4ECDC4;}}
+.cparticle{position:fixed;border-radius:2px;pointer-events:none;z-index:999;animation:cffall 3s ease-in forwards;}
+@keyframes cffall{0%{opacity:1;transform:translateY(-20px) rotate(0);}100%{opacity:0;transform:translateY(100vh) rotate(720deg);}}
+
+/* ── CONTROLS ── */
+#controls-bar{width:100%;max-width:880px;background:rgba(255,255,255,0.06);border-radius:0 0 16px 16px;padding:10px 16px 13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ctrl{padding:9px 20px;border-radius:50px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;border:none;cursor:pointer;transition:all .18s;box-shadow:0 3px 10px rgba(0,0,0,0.25);display:inline-flex;align-items:center;gap:5px;}
+.ctrl:hover{transform:translateY(-2px);filter:brightness(1.08);}
+.ctrl-play{background:linear-gradient(135deg,#4ECDC4,#26B5AC);color:#fff;}
+.ctrl-pause{background:linear-gradient(135deg,#FFC048,#E6A000);color:#fff;}
+.ctrl-mute{background:rgba(255,255,255,0.14);color:#fff;border:1.5px solid rgba(255,255,255,0.25);}
+#pdots{display:flex;gap:6px;align-items:center;margin-left:auto;}
+.sdot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all .3s;}
+.sdot.done{background:#27AE60;}.sdot.active{background:#FFD700;transform:scale(1.4);}
+.sdot-lbl{font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);white-space:nowrap;}
+.vol-wave{display:flex;align-items:flex-end;gap:2px;height:18px;}
+.vb{width:3px;border-radius:2px;background:#4ECDC4;height:4px;}
+.vol-wave.on .vb{animation:vw .5s ease-in-out infinite alternate;}
+.vol-wave.on .vb:nth-child(1){animation-delay:0s;}.vol-wave.on .vb:nth-child(2){animation-delay:.13s;}.vol-wave.on .vb:nth-child(3){animation-delay:.26s;}.vol-wave.on .vb:nth-child(4){animation-delay:.39s;}
+@keyframes vw{from{height:3px;}to{height:16px;}}
+
+/* feedback */
+#fb-overlay{display:none;position:fixed;inset:0;background:rgba(10,6,30,0.88);z-index:200;align-items:center;justify-content:center;}
+#fb-overlay.open{display:flex;}
+#fb-box{background:#fff;border-radius:22px;padding:26px;width:min(94vw,480px);box-shadow:0 24px 60px rgba(0,0,0,0.55);max-height:90vh;overflow-y:auto;}
+#fb-box h2{font-family:'Fredoka One',cursive;font-size:21px;color:#26B5AC;margin-bottom:4px;}
+.fb-sub{font-size:13px;color:#777;font-weight:600;margin-bottom:14px;}
+.fb-g{margin-bottom:14px;}
+.fb-g label{display:block;font-weight:800;color:#444;margin-bottom:5px;font-size:.9em;}
+.fb-g input,.fb-g select,.fb-g textarea{width:100%;padding:10px 13px;border:2px solid #EEE;border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;outline:none;transition:border-color .2s;}
+.fb-g input:focus,.fb-g select:focus,.fb-g textarea:focus{border-color:#4ECDC4;}
+.fb-g textarea{height:72px;resize:none;}
+.fb-stars{display:flex;gap:8px;font-size:1.9em;cursor:pointer;margin-top:4px;}
+.fb-star{color:#ddd;transition:color .15s,transform .15s;user-select:none;}
+.fb-star:hover,.fb-star.on{color:#FFD700;}
+.fb-star:hover{transform:scale(1.2);}
+.fb-btns{display:flex;gap:9px;margin-top:14px;}
+#fb-send{flex:1;padding:11px;border-radius:50px;border:none;cursor:pointer;background:linear-gradient(135deg,#4ECDC4,#26B5AC);color:#fff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;}
+#fb-cancel{padding:11px 18px;border-radius:50px;border:2px solid #EEE;background:#fff;color:#aaa;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
+#fb-thanks{display:none;text-align:center;padding:14px 0;}
+#fb-thanks .ck{font-size:52px;}
+#fb-thanks p{font-size:14px;font-weight:800;color:#27AE60;margin-top:7px;}
+
+.bg-intro{background:linear-gradient(155deg,#e8fff8,#e0fff5);}
+.bg-concept{background:linear-gradient(155deg,#fff9f0,#fff3e0);}
+.bg-song{background:linear-gradient(155deg,#e8fff4,#d8f5ee);}
+.bg-act{background:linear-gradient(155deg,#f0f4ff,#e8f0ff);}
+.bg-done{background:linear-gradient(155deg,#fff9f0,#f0fff8);}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="float-sym" style="font-size:110px;left:4%;animation-delay:0s;animation-duration:12s;">&gt;</div>
+  <div class="float-sym" style="font-size:90px;left:26%;animation-delay:3.5s;animation-duration:10s;">&lt;</div>
+  <div class="float-sym" style="font-size:100px;left:58%;animation-delay:6s;animation-duration:14s;">=</div>
+  <div class="float-sym" style="font-size:80px;left:80%;animation-delay:1.5s;animation-duration:11s;">&gt;</div>
+
+  <!-- ══ SCENE 0: INTRO ══ -->
+  <div class="scene active bg-intro" id="sc0">
+    <div class="hband" style="background:linear-gradient(135deg,#1B8A7A,#26B5AC);">
+      <h1>🐊 Bigger Than, Smaller Than &amp; Equals!</h1>
+      <p>Greedy Croc · Grade 1 Mathematics · Balmoral Primary</p>
+    </div>
+    <div class="content">
+      <div class="numby-row"><div class="numby-face" id="nf0"></div><div><div class="numby-label">Greedy Croc</div><div class="speech-bub" id="bb0">Getting ready…</div></div></div>
+      <div class="compare-row" id="intro-display"></div>
+    </div>
+    <div id="prog-wrap"><div id="prog-fill"></div></div>
+  </div>
+
+  <!-- ══ SCENE 1: BIGGER THAN ══ -->
+  <div class="scene bg-concept" id="sc1">
+    <div class="hband" style="background:linear-gradient(135deg,#C0392B,#E74C3C);">
+      <h1>🐊 Bigger Than — the &gt; sign</h1>
+      <p>The crocodile's mouth OPENS towards the bigger number!</p>
+    </div>
+    <div class="content">
+      <div class="numby-row"><div class="numby-face" id="nf1"></div><div><div class="numby-label">Greedy Croc</div><div class="speech-bub" id="bb1"></div></div></div>
+      <div class="compare-row" id="sc1-display"></div>
+      <div class="croc-card">
+        <div class="croc-title">🐊 Remember: the crocodile is HUNGRY!</div>
+        <div class="croc-rule">The open mouth always points to the <strong style="color:#E74C3C;">bigger</strong> number<br>because the crocodile wants to eat the most!<br><br>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.4em;color:#E74C3C;">7 &gt; 3</span> — Seven is bigger than three</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 2: SMALLER THAN ══ -->
+  <div class="scene bg-concept" id="sc2">
+    <div class="hband" style="background:linear-gradient(135deg,#1565C0,#1976D2);">
+      <h1>🐊 Smaller Than — the &lt; sign</h1>
+      <p>The mouth still opens to the bigger number — even when it comes second!</p>
+    </div>
+    <div class="content">
+      <div class="numby-row"><div class="numby-face" id="nf2"></div><div><div class="numby-label">Greedy Croc</div><div class="speech-bub" id="bb2"></div></div></div>
+      <div class="compare-row" id="sc2-display"></div>
+      <div class="croc-card">
+        <div class="croc-title">🐊 The crocodile still wants the big one!</div>
+        <div class="croc-rule">The open mouth still points to the <strong style="color:#2980B9;">bigger</strong> number<br>This time the bigger number comes <strong>second</strong>!<br><br>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.4em;color:#2980B9;">2 &lt; 8</span> — Two is smaller than eight</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 3: EQUALS ══ -->
+  <div class="scene bg-concept" id="sc3">
+    <div class="hband" style="background:linear-gradient(135deg,#1B5E20,#2E7D32);">
+      <h1>⚖️ Equals — the = sign</h1>
+      <p>When both numbers are the same!</p>
+    </div>
+    <div class="content">
+      <div class="numby-row"><div class="numby-face" id="nf3"></div><div><div class="numby-label">Greedy Croc</div><div class="speech-bub" id="bb3"></div></div></div>
+      <div class="compare-row" id="sc3-display"></div>
+      <div class="croc-card">
+        <div class="croc-title">⚖️ The crocodile cannot choose — they are the same!</div>
+        <div class="croc-rule">When both numbers are the same, we use the <strong style="color:#27AE60;">equals</strong> sign<br>Two straight lines — perfectly balanced!<br><br>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.4em;color:#27AE60;">5 = 5</span> — Five equals five</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 4: ACTIVITY ══ -->
+  <div class="scene bg-act" id="sc4">
+    <div class="hband" style="background:linear-gradient(135deg,#1B5E20,#2E7D32);">
+      <h1>🎯 Your Turn! Choose the Right Sign!</h1>
+      <p>Look at the two numbers — then tap &gt; , &lt; or = !</p>
+    </div>
+    <div class="content">
+      <div class="numby-row"><div class="numby-face" id="nf4"></div><div><div class="numby-label">Greedy Croc</div><div class="speech-bub" id="bb4"></div></div></div>
+      <div id="act-wrap" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ══ SCENE 6: WELL DONE ══ -->
+  <div class="scene bg-done" id="sc5">
+    <div class="hband" style="background:linear-gradient(135deg,#1B8A7A,#26B5AC);">
+      <h1>🏆 Absolutely Amazing Work!</h1>
+    </div>
+    <div class="content">
+      <div class="numby-row"><div class="numby-face" id="nf5"></div><div><div class="numby-label">Greedy Croc</div><div class="speech-bub" id="bb5"></div></div></div>
+      <div style="font-size:50px;animation:spin-in .6s cubic-bezier(.34,1.56,.64,1);">🎉</div>
+      <div class="confetti-text">YOU ARE A MATHS SUPERSTAR! 🌟</div>
+      <div style="background:#fff;border-radius:14px;padding:14px 16px;border:2.5px solid #4ECDC4;width:100%;max-width:640px;">
+        <div style="font-size:12px;font-weight:900;color:#1B8A7A;margin-bottom:6px;">🏠 Dear Mum and Dad — Please revise this concept!</div>
+        <div style="font-size:13px;color:#333;font-weight:700;line-height:1.75;">
+          Your child has been introduced to <strong>bigger than (&gt;)</strong>, <strong>smaller than (&lt;)</strong>, and <strong>equals (=)</strong>.<br><br>
+          Please do revision of this concept every day until your child is completely confident. Here are easy ways to practise:<br><br>
+          🖐️ <strong>Finger game</strong> — hold up any number of fingers on each hand. Ask: "Which hand has more?"<br>
+          🪨 <strong>Objects at home</strong> — put 4 stones on one side and 7 on the other. Ask: "Is 4 bigger or smaller than 7?"<br>
+          🃏 <strong>Cards</strong> — pick two number cards. Let your child draw the correct sign between them.<br>
+          🐊 <strong>Crocodile trick</strong> — remind your child: the crocodile is always hungry and always faces the bigger number!<br><br>
+          💡 <em>Children often confuse &gt; and &lt;. Keep practising until the signs become second nature!</em>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div id="controls-bar">
+  <button class="ctrl ctrl-play"  id="btn-start"  onclick="startVideo()">▶ Play Lesson</button>
+  <button class="ctrl ctrl-pause" id="btn-pause"  onclick="togglePause()" style="display:none;">⏸ Pause</button>
+  <button class="ctrl ctrl-mute"  id="btn-mute"   onclick="toggleMute()">🔊</button>
+  <div class="vol-wave" id="vwave"><div class="vb"></div><div class="vb"></div><div class="vb"></div><div class="vb"></div></div>
+  <div id="pdots">
+    <span class="sdot-lbl">Lesson:</span>
+    <div class="sdot active" id="d0"></div><div class="sdot" id="d1"></div><div class="sdot" id="d2"></div>
+    <div class="sdot" id="d3"></div><div class="sdot" id="d4"></div><div class="sdot" id="d5"></div>
+  </div>
+  <button class="ctrl" id="btn-fb"     onclick="openFB()"     style="background:linear-gradient(135deg,#4ECDC4,#26B5AC);color:#fff;display:none;">📋 Feedback</button>
+  <button class="ctrl" id="btn-replay" onclick="replayVideo()" style="background:linear-gradient(135deg,#6C5CE7,#A29BFE);color:#fff;display:none;">🔄 Play Again</button>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div id="fb-overlay">
+  <div id="fb-box">
+    <h2>📋 Parent Feedback for the Teacher</h2>
+    <div class="fb-sub">Please tell the teacher how your child did with comparing numbers today!</div>
+    <div class="fb-g"><label>Child's Name</label><input type="text" id="fb-child" placeholder="Child's full name"/></div>
+    <div class="fb-g"><label>Parent / Guardian Name</label><input type="text" id="fb-parent" placeholder="Your name"/></div>
+    <div class="fb-g"><label>Date Completed</label><input type="date" id="fb-date"/></div>
+    <div class="fb-g"><label>Lesson Completion</label>
+      <select id="fb-completion">
+        <option value="">Select…</option>
+        <option value="full">✅ Completed the full lesson</option>
+        <option value="paused">⏸ Completed with many pauses</option>
+        <option value="retry">🔄 Did not complete — will retry</option>
+      </select>
+    </div>
+    <div class="fb-g">
+      <label>How well did your child understand the signs? ⭐</label>
+      <div class="fb-stars" id="fbstars">
+        <span class="fb-star" data-v="1">★</span><span class="fb-star" data-v="2">★</span>
+        <span class="fb-star" data-v="3">★</span><span class="fb-star" data-v="4">★</span><span class="fb-star" data-v="5">★</span>
+      </div>
+    </div>
+    <div class="fb-g"><label>Which sign was most difficult?</label>
+      <select id="fb-hard">
+        <option value="">Select…</option>
+        <option value="gt">❌ Bigger than (&gt;)</option>
+        <option value="lt">❌ Smaller than (&lt;)</option>
+        <option value="eq">❌ Equals (=)</option>
+        <option value="confuse">❌ Confuses &gt; and &lt;</option>
+        <option value="none">✅ All were fine!</option>
+      </select>
+    </div>
+    <div class="fb-g"><label>Comments or Questions for the Teacher</label>
+      <textarea id="fb-note" placeholder="Share any observations or questions…"></textarea>
+    </div>
+    <div class="fb-btns">
+      <button id="fb-cancel" onclick="closeFB()">Cancel</button>
+      <button id="fb-send"   onclick="sendFB()">📤 Submit Feedback</button>
+    </div>
+    <div id="fb-thanks"><div class="ck">✅</div><p>Feedback sent! Thank you! 💕</p></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// GREEDY CROC AVATAR
+// ══════════════════════════════════════════════════════
+function crocSVG(talking=false, size=58){
+  const mouthPath = talking
+    ? /* open mouth - chomping */ `
+      <!-- open chomping mouth -->
+      <path d="M18 68 Q50 95 82 68" fill="#1A5C1A" stroke="#145214" stroke-width="1.5"/>
+      <path d="M18 68 Q50 60 82 68" fill="#F5DEB3"/>
+      <!-- top teeth -->
+      <rect x="23" y="60" width="9" height="13" rx="3" fill="white"/>
+      <rect x="38" y="58" width="9" height="15" rx="3" fill="white"/>
+      <rect x="53" y="58" width="9" height="15" rx="3" fill="white"/>
+      <rect x="68" y="60" width="9" height="13" rx="3" fill="white"/>
+      <!-- bottom teeth -->
+      <rect x="28" y="72" width="8" height="11" rx="3" fill="white"/>
+      <rect x="44" y="74" width="8" height="10" rx="3" fill="white"/>
+      <rect x="60" y="72" width="8" height="11" rx="3" fill="white"/>
+      <!-- tongue -->
+      <ellipse cx="50" cy="84" rx="14" ry="8" fill="#E8112D"/>
+      <ellipse cx="50" cy="82" rx="10" ry="5" fill="#C62828" opacity=".5"/>`
+    : /* closed happy grin */ `
+      <!-- closed grin -->
+      <path d="M18 68 Q50 82 82 68" fill="#1A5C1A" stroke="#145214" stroke-width="1.5"/>
+      <path d="M18 68 Q50 72 82 68" fill="#F5DEB3"/>
+      <!-- peeking teeth in grin -->
+      <path d="M25 68 Q50 76 75 68" stroke="white" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/>`;
+
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- bg circle -->
+  <circle cx="50" cy="50" r="48" fill="#E8FFF0"/>
+
+  <!-- ── CROC HEAD ── big round head -->
+  <ellipse cx="50" cy="52" rx="42" ry="38" fill="#2ECC71"/>
+  <!-- head shading / texture -->
+  <ellipse cx="50" cy="52" rx="40" ry="36" fill="none" stroke="#27AE60" stroke-width="2" opacity=".4"/>
+
+  <!-- ── SNOUT ── long flat snout at the bottom -->
+  <ellipse cx="50" cy="74" rx="34" ry="16" fill="#27AE60"/>
+  <ellipse cx="50" cy="74" rx="32" ry="14" fill="none" stroke="#1E8449" stroke-width="1.5" opacity=".5"/>
+
+  <!-- ── NOSTRILS ── -->
+  <ellipse cx="40" cy="66" rx="5" ry="4" fill="#1E8449"/>
+  <ellipse cx="60" cy="66" rx="5" ry="4" fill="#1E8449"/>
+  <ellipse cx="40" cy="66" rx="2.5" ry="2" fill="#145214"/>
+  <ellipse cx="60" cy="66" rx="2.5" ry="2" fill="#145214"/>
+
+  <!-- ── BUMPY SCALES on head ── -->
+  <circle cx="30" cy="44" r="5" fill="#27AE60" opacity=".7"/>
+  <circle cx="50" cy="36" r="6" fill="#27AE60" opacity=".7"/>
+  <circle cx="70" cy="44" r="5" fill="#27AE60" opacity=".7"/>
+  <circle cx="38" cy="36" r="4" fill="#27AE60" opacity=".6"/>
+  <circle cx="62" cy="36" r="4" fill="#27AE60" opacity=".6"/>
+
+  <!-- ── EYES — big bulging croc eyes on top of head ── -->
+  <!-- left eye socket -->
+  <circle cx="30" cy="32" r="13" fill="#27AE60"/>
+  <circle cx="30" cy="32" r="11" fill="white"/>
+  <!-- right eye socket -->
+  <circle cx="70" cy="32" r="13" fill="#27AE60"/>
+  <circle cx="70" cy="32" r="11" fill="white"/>
+  <!-- irises — yellow like real croc eyes -->
+  <circle cx="30" cy="32" r="7.5" fill="#F9A825"/>
+  <circle cx="70" cy="32" r="7.5" fill="#F9A825"/>
+  <!-- pupils — slit-like vertical -->
+  <ellipse cx="30" cy="32" rx="3" ry="6" fill="#1A1A1A"/>
+  <ellipse cx="70" cy="32" rx="3" ry="6" fill="#1A1A1A"/>
+  <!-- eye shine -->
+  <circle cx="32" cy="29" r="2.5" fill="white"/>
+  <circle cx="72" cy="29" r="2.5" fill="white"/>
+  <!-- eyelid ridge -->
+  <path d="M20 26 Q30 20 40 26" stroke="#1E8449" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M60 26 Q70 20 80 26" stroke="#1E8449" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- ── CHEEK SCALES ── -->
+  <circle cx="18" cy="52" r="6" fill="#27AE60" opacity=".6"/>
+  <circle cx="82" cy="52" r="6" fill="#27AE60" opacity=".6"/>
+
+  <!-- ── MOUTH ── -->
+  ${mouthPath}
+
+  </svg>`;
+}
+function injectFaces(){ for(let i=0;i<=6;i++){const el=document.getElementById('nf'+i);if(el)el.innerHTML=crocSVG(false,58);} }
+
+let lipTimer=null;
+function startLip(s){ stopLip();let f=false;const el=document.getElementById('nf'+s);if(el)el.innerHTML=crocSVG(true,58);lipTimer=setInterval(()=>{f=!f;const e=document.getElementById('nf'+s);if(e)e.innerHTML=crocSVG(f,58);},135); }
+function stopLip(){ if(lipTimer){clearInterval(lipTimer);lipTimer=null;} }
+function closeMouth(s){ stopLip();const el=document.getElementById('nf'+s);if(el)el.innerHTML=crocSVG(false,58); }
+
+// ══════════════════════════════════════════════════════
+// AUDIO
+// ══════════════════════════════════════════════════════
+function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='square';o.frequency.value=380;g.gain.setValueAtTime(.14,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.3);o.start(c.currentTime);o.stop(c.currentTime+.3);}catch(e){}}
+function ding(){try{const c=new(window.AudioContext||window.webkitAudioContext)();[523,659,784,1046].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;o.type='triangle';g.gain.setValueAtTime(.11,c.currentTime+i*.12);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.12+.4);o.start(c.currentTime+i*.12);o.stop(c.currentTime+i*.12+.4);});}catch(e){}}
+function playNote(freq){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='triangle';o.frequency.value=freq;g.gain.setValueAtTime(.12,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.35);o.start(c.currentTime);o.stop(c.currentTime+.38);}catch(e){}}
+
+// ══════════════════════════════════════════════════════
+// SPEECH
+// ══════════════════════════════════════════════════════
+let cachedVoices=[],speechReady=false;
+function unlockSpeech(){
+  if(speechReady||!window.speechSynthesis)return;
+  speechReady=true;
+  cachedVoices=window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>{cachedVoices=window.speechSynthesis.getVoices();};
+  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;window.speechSynthesis.speak(u);
+}
+function pickVoice(){
+  const vs=cachedVoices.length?cachedVoices:(window.speechSynthesis?window.speechSynthesis.getVoices():[]);
+  const want=['Samantha','Karen','Moira','Tessa','Fiona','Victoria','Google UK English Female','Microsoft Zira'];
+  for(const nm of want){const f=vs.find(x=>x.name.includes(nm));if(f)return f;}
+  return vs.find(x=>x.lang.startsWith('en')&&x.name.toLowerCase().includes('female'))||vs.find(x=>x.lang.startsWith('en'))||vs[0]||null;
+}
+
+let muted=false,paused=false,playing=false,currentSc=0;
+let bTimer=null,starRating=0;
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function waitPause(){while(paused)await delay(100);}
+
+function speak(text,scIdx){
+  return new Promise(resolve=>{
+    setBubble(scIdx,text);startLip(scIdx);
+    const vw=document.getElementById('vwave');if(vw)vw.classList.add('on');
+    function finish(){stopLip();closeMouth(scIdx);if(vw)vw.classList.remove('on');resolve();}
+    if(muted||!window.speechSynthesis){setTimeout(finish,text.split(' ').length*290+500);return;}
+    window.speechSynthesis.cancel();
+    setTimeout(()=>{
+      const u=new SpeechSynthesisUtterance(text);u.rate=0.82;u.pitch=1.25;u.volume=1;
+      const v=pickVoice();if(v)u.voice=v;
+      const safety=setTimeout(finish,Math.max(4000,text.split(' ').length*650));
+      u.onend=()=>{clearTimeout(safety);finish();};u.onerror=()=>{clearTimeout(safety);finish();};
+      window.speechSynthesis.speak(u);
+    },50);
+  });
+}
+function stopSpeech(){stopLip();if(window.speechSynthesis)window.speechSynthesis.cancel();const vw=document.getElementById('vwave');if(vw)vw.classList.remove('on');}
+function setBubble(idx,text){
+  const el=document.getElementById('bb'+idx);if(!el)return;
+  el.innerHTML='';const words=text.split(' ');let i=0;if(bTimer)clearInterval(bTimer);
+  const pace=Math.max(48,(text.length*48)/words.length);
+  bTimer=setInterval(()=>{
+    if(i<words.length){el.innerHTML=words.slice(0,i+1).join(' ')+'<span style="display:inline-block;width:2px;height:14px;background:#4ECDC4;vertical-align:middle;margin-left:2px;"></span>';i++;}
+    else{clearInterval(bTimer);el.innerHTML=text;}
+  },pace);
+}
+
+// ══════════════════════════════════════════════════════
+// SCENE MANAGEMENT
+// ══════════════════════════════════════════════════════
+function goScene(idx){
+  document.querySelectorAll('.scene').forEach(s=>{s.classList.remove('active');s.style.display='none';});
+  const el=document.getElementById('sc'+idx);if(el){el.classList.add('active');el.style.display='flex';}
+  currentSc=idx;
+  for(let i=0;i<6;i++){const d=document.getElementById('d'+i);if(!d)continue;d.classList.remove('active','done');if(i<idx)d.classList.add('done');else if(i===idx)d.classList.add('active');}
+  const pf=document.getElementById('prog-fill');if(pf)pf.style.width=((idx/5)*100)+'%';
+}
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+const COLS=['#E74C3C','#27AE60','#2980B9','#F39C12','#9B59B6','#E67E22','#1ABC9C','#8E44AD','#D35400','#1565C0'];
+function colFor(n){return COLS[(n-1)%COLS.length];}
+
+function makeNumBox(n){
+  const d=document.createElement('div');d.className='num-box';
+  d.style.background=`linear-gradient(145deg,${colFor(n)},${colFor(n)}bb)`;
+  d.textContent=n;return d;
+}
+function makeSymDisplay(sym,cssClass){
+  const d=document.createElement('div');d.className='sym-box '+cssClass;d.textContent=sym;return d;
+}
+function showCompare(containerId,a,sym,b){
+  const c=document.getElementById(containerId);if(!c)return;c.innerHTML='';
+  c.appendChild(makeNumBox(a));
+  const s=document.createElement('div');
+  s.className='sym-box '+(sym==='>'?'big':sym==='<'?'small':'eq');
+  s.textContent=sym;c.appendChild(s);
+  c.appendChild(makeNumBox(b));
+}
+
+// ══════════════════════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════════════════════
+function togglePause(){
+  paused=!paused;const btn=document.getElementById('btn-pause');
+  if(paused){btn.textContent='▶ Resume';if(window.speechSynthesis)window.speechSynthesis.pause();stopLip();}
+  else{btn.textContent='⏸ Pause';if(window.speechSynthesis)window.speechSynthesis.resume();}
+}
+function toggleMute(){muted=!muted;document.getElementById('btn-mute').textContent=muted?'🔇':'🔊';if(muted)stopSpeech();}
+
+// ══════════════════════════════════════════════════════
+// SCENE FUNCTIONS
+// ══════════════════════════════════════════════════════
+async function sc0(){
+  goScene(0);await delay(300);
+  // Show all three symbols in intro
+  const d=document.getElementById('intro-display');d.innerHTML='';
+  [{s:'>',c:'big'},{s:'<',c:'small'},{s:'=',c:'eq'}].forEach(x=>{
+    const b=document.createElement('div');b.className='sym-box '+x.c;b.textContent=x.s;d.appendChild(b);
+  });
+  await speak(`Hello, wonderful learner! I am Greedy Croc! Today we learn something very exciting — we are going to learn about three special signs in mathematics! the bigger than sign, the smaller than sign, and the equals sign! Are you ready? Let us go!`,0);
+}
+
+async function sc1(){
+  goScene(1);await delay(300);
+  showCompare('sc1-display',7,'>',3);
+  await speak(`Our first sign is bigger than. It looks like this: the greater than sign!`,1);
+  await delay(600);await waitPause();
+  await speak(`I want you to think of a hungry crocodile! The crocodile always opens its mouth towards the bigger number — because it wants to eat the most!`,1);
+  await delay(700);await waitPause();
+  await speak(`Look: 7 is bigger than 3. Count on your fingers — seven needs more fingers than three! So the crocodile opens its mouth towards the 7!`,1);
+  await delay(600);await waitPause();
+  showCompare('sc1-display',9,'>',4);
+  await speak(`Let us try another one! 9 is bigger than 4. Nine needs more fingers than four. The mouth opens towards the nine!`,1);
+  await delay(500);await waitPause();
+  await speak(`Read it with me: Nine is bigger than four! Excellent!`,1);
+}
+
+async function sc2(){
+  goScene(2);await delay(300);
+  showCompare('sc2-display',2,'<',8);
+  await speak(`Our second sign is smaller than. The crocodile is still hungry — it still wants the bigger number! But this time the bigger number comes second!`,2);
+  await delay(700);await waitPause();
+  await speak(`Look: 2 is smaller than 8. Count your fingers — two is fewer than eight! The crocodile opens its mouth towards the eight — the bigger one!`,2);
+  await delay(600);await waitPause();
+  showCompare('sc2-display',3,'<',6);
+  await speak(`Try another one! 3 is smaller than 6. Three needs fewer fingers than six. The mouth opens towards the six!`,2);
+  await delay(500);await waitPause();
+  await speak(`Read it with me: Three is smaller than six! You are doing brilliantly!`,2);
+}
+
+async function sc3(){
+  goScene(3);await delay(300);
+  showCompare('sc3-display',5,'=',5);
+  await speak(`Our third sign is equals! This one is special. When both numbers are exactly the same — we use the equals sign!`,3);
+  await delay(700);await waitPause();
+  await speak(`Look: 5 equals 5. Count your fingers on both hands — five and five! They are the same! The crocodile cannot choose — both are equal!`,3);
+  await delay(600);await waitPause();
+  showCompare('sc3-display',4,'=',4);
+  await speak(`Another one: 4 equals 4. Both sides are the same! The equals sign has two straight lines — perfectly balanced, like a balance scale!`,3);
+  await delay(500);await waitPause();
+  await speak(`Read it with me: four equals four! Wonderful!`,3);
+}
+
+
+// ══════════════════════════════════════════════════════
+// ACTIVITY SYSTEM
+// ══════════════════════════════════════════════════════
+const ACTIVITIES=[
+  {a:7, b:3, ans:'>', label:'7 ___ 3'},
+  {a:2, b:5, ans:'<', label:'2 ___ 5'},
+  {a:4, b:4, ans:'=', label:'4 ___ 4'},
+  {a:6, b:9, ans:'<', label:'6 ___ 9'},
+  {a:8, b:1, ans:'>', label:'8 ___ 1'},
+  {a:3, b:3, ans:'=', label:'3 ___ 3'},
+  {a:5, b:7, ans:'<', label:'5 ___ 7'},
+  {a:9, b:2, ans:'>', label:'9 ___ 2'},
+];
+
+async function sc4(){
+  goScene(4);await delay(300);
+  await speak(`Now it is your turn! I will show you two numbers. You must tap the correct sign between them! Is it bigger than, smaller than, or equals? Remember your crocodile trick — and use your fingers to count!`,4);
+  await delay(400);await waitPause();
+
+  for(let i=0;i<ACTIVITIES.length;i++){
+    await waitPause();
+    await runCompareProblem(ACTIVITIES[i],i);
+    await delay(350);await waitPause();
+  }
+  ding();launchConfetti();
+  await speak(`You answered all of them correctly! You are an absolute superstar! I am so proud of you!`,4);
+}
+
+async function runCompareProblem(act,idx){
+  const wrap=document.getElementById('act-wrap');
+  wrap.innerHTML='';
+
+  // Number display with blank in middle
+  const numRow=document.createElement('div');
+  numRow.className='compare-row';
+  numRow.style.marginBottom='4px';
+  const boxA=makeNumBox(act.a);
+  const blank=document.createElement('div');
+  blank.className='sym-box';
+  blank.style.cssText='background:white;border:4px dashed #ADB5BD;color:#ADB5BD;font-size:48px;';
+  blank.textContent='?';
+  const boxB=makeNumBox(act.b);
+  numRow.appendChild(boxA);numRow.appendChild(blank);numRow.appendChild(boxB);
+  wrap.appendChild(numRow);
+
+  // Hint
+  const hint=document.createElement('div');
+  hint.className='hint-box';
+  hint.textContent=`🖐️ Count ${act.a} fingers... now count ${act.b} fingers. Which is more?`;
+  wrap.appendChild(hint);
+
+  // Symbol choice buttons
+  const choices=document.createElement('div');choices.className='sym-choices';
+  const btns={};
+  [{sym:'>',cls:'gt'},{sym:'<',cls:'lt'},{sym:'=',cls:'eq2'}].forEach(opt=>{
+    const b=document.createElement('button');b.className='sym-btn '+opt.cls;b.textContent=opt.sym;
+    btns[opt.sym]=b;choices.appendChild(b);
+    wrap.appendChild; // attach later
+  });
+  wrap.appendChild(choices);
+
+  // Announce
+  const dirHint=act.ans==='>'?`${act.a} is bigger than ${act.b}`
+               :act.ans==='<'?`${act.a} is smaller than ${act.b}`
+               :`${act.a} and ${act.b} are the same`;
+  await speak(`Question ${idx+1}! ${act.a} blank ${act.b}. Count your fingers and tap the correct sign!`,4);
+
+  // Wait for correct answer
+  await new Promise(resolve=>{
+    Object.entries(btns).forEach(([sym,btn])=>{
+      btn.onclick=async()=>{
+        if(sym===act.ans){
+          // ✅ Correct
+          ding();
+          Object.values(btns).forEach(b=>{b.disabled=true;b.style.transform='scale(.95)';});
+          blank.textContent=sym;
+          blank.style.background=sym==='>'?'linear-gradient(145deg,#E74C3C,#C0392B)':sym==='<'?'linear-gradient(145deg,#2980B9,#1565C0)':'linear-gradient(145deg,#27AE60,#1B5E20)';
+          blank.style.color='#fff';blank.style.border='4px solid rgba(255,255,255,.3)';
+          hint.textContent=`✅ ${dirHint}! Well done!`;
+          hint.style.background='linear-gradient(135deg,#d4f5e2,#a8e8c4)';
+          hint.style.borderColor='#27AE60';hint.style.color='#155724';
+          await speak(`Correct! ${act.a} ${sym==='>'?'is bigger than':sym==='<'?'is smaller than':'equals'} ${act.b}! Well done!`,4);
+          resolve();
+        } else {
+          // ❌ Wrong
+          beep();btn.classList.add('wrong-shake');
+          setTimeout(()=>btn.classList.remove('wrong-shake'),500);
+          const retry=act.ans==='='
+            ?`Not quite! Both numbers are the same — use the equals sign! Ask Mum or Dad to help you count on your fingers.`
+            :`Not quite! Use your fingers to count — which number needs more fingers? Ask Mum or Dad to help you choose the right sign.`;
+          await speak(retry,4);
+        }
+      };
+    });
+  });
+}
+
+async function sc5(){
+  goScene(5);await delay(300);
+  await speak(`You did it! You have learned all three signs today — bigger than, smaller than, and equals! I am so incredibly proud of you! Remember your crocodile — he always faces the biggest number! And remember — please keep practising with Mum and Dad every day!`,5);
+}
+
+// ══════════════════════════════════════════════════════
+// MAIN FLOW
+// ══════════════════════════════════════════════════════
+async function startVideo(){
+  if(playing)return;unlockSpeech();playing=true;
+  document.getElementById('btn-start').style.display='none';
+  document.getElementById('btn-pause').style.display='inline-flex';
+  await runFrom(0);
+}
+async function runFrom(start){
+  for(let sc=start;sc<6;sc++){
+    if(!playing)return;await waitPause();
+    if(sc===0)await sc0();else if(sc===1)await sc1();else if(sc===2)await sc2();
+    else if(sc===3)await sc3();else if(sc===4)await sc4();else if(sc===5)await sc5();
+    if(!playing)return;await delay(300);
+  }
+  if(playing){
+    document.getElementById('btn-fb').style.display='inline-flex';
+    document.getElementById('btn-replay').style.display='inline-flex';
+    document.getElementById('btn-pause').style.display='none';playing=false;
+  }
+}
+async function replayVideo(){
+  stopSpeech();playing=false;paused=false;
+  document.getElementById('btn-fb').style.display='none';document.getElementById('btn-replay').style.display='none';
+  document.getElementById('btn-pause').textContent='⏸ Pause';await delay(300);startVideo();
+}
+
+// ══════════════════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════════════════
+function launchConfetti(){
+  const cols=['#4ECDC4','#FFD700','#E74C3C','#27AE60','#A29BFE','#FF6B6B'];
+  for(let i=0;i<65;i++){const p=document.createElement('div');p.className='cparticle';
+    p.style.cssText=`left:${Math.random()*100}%;top:-20px;background:${cols[i%cols.length]};
+      width:${7+Math.random()*11}px;height:${7+Math.random()*11}px;
+      border-radius:${Math.random()>.5?'50%':'3px'};
+      animation-delay:${Math.random()*1.8}s;animation-duration:${2+Math.random()*1.6}s;`;
+    document.body.appendChild(p);}
+  setTimeout(()=>document.querySelectorAll('.cparticle').forEach(p=>p.remove()),6000);
+}
+
+// ══════════════════════════════════════════════════════
+// FEEDBACK
+// ══════════════════════════════════════════════════════
+function openFB(){document.getElementById('fb-overlay').classList.add('open');document.getElementById('fb-thanks').style.display='none';document.getElementById('fb-date').value=new Date().toISOString().slice(0,10);document.querySelectorAll('.fb-star').forEach(st=>{st.onclick=()=>{starRating=parseInt(st.dataset.v);document.querySelectorAll('.fb-star').forEach((s,i)=>s.classList.toggle('on',i<starRating));};});}
+function closeFB(){document.getElementById('fb-overlay').classList.remove('open');}
+function sendFB(){
+  const child=document.getElementById('fb-child').value.trim();
+  const parent=document.getElementById('fb-parent').value.trim();
+  const date=document.getElementById('fb-date').value;
+  const completion=document.getElementById('fb-completion').value;
+  const hard=document.getElementById('fb-hard').value;
+  const note=document.getElementById('fb-note').value.trim();
+  const stars=starRating?'⭐'.repeat(starRating)+` (${starRating}/5)`:'Not rated';
+  const msg=`📋 *Comparing Numbers Feedback — Balmoral Primary*\n`+
+    `👦 Child: ${child||'(not given)'}\n👤 Parent: ${parent||'(not given)'}\n`+
+    `📅 Date: ${date||'(not given)'}\n📚 Lesson: Bigger Than, Smaller Than, Equals – Grade 1\n`+
+    `🏁 Completion: ${completion||'(not selected)'}\n⭐ Understanding: ${stars}\n`+
+    `❓ Most difficult: ${hard||'(not selected)'}\n`+(note?`💬 Comments: ${note}`:'');
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  document.getElementById('fb-thanks').style.display='block';document.querySelector('.fb-btns').style.display='none';
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+const s=document.createElement('style');
+s.textContent='@keyframes spin-in{from{transform:scale(0) rotate(-180deg);}to{transform:scale(1) rotate(0);}}';
+document.head.appendChild(s);
+injectFaces();
+</script>
+</body>
+</html>
